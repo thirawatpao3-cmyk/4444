@@ -1,0 +1,103 @@
+-- สร้าง UI หน้าต่างเปลี่ยนเพลง Tool (ช่องใส่เพลงอัจฉริยะ + ขอบวิบวับช้าๆ + แสดงชื่อเพลงที่กำลังเล่น)
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+if playerGui:FindFirstChild("ToolMusicUI_SlowBWFlasherWithSong") then
+    playerGui.ToolMusicUI_SlowBWFlasherWithSong:Destroy()
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ToolMusicUI_SlowBWFlasherWithSong"
+screenGui.Parent = playerGui
+
+-- เพิ่มความสูงกรอบหลักเป็น 180 เพื่อให้มีพื้นที่ใส่ชื่อเพลง
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 260, 0, 180)
+frame.Position = UDim2.new(0.5, -130, 0.4, -90)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+
+-- ขอบเรืองแสงวิบวับ ขาว-ดำ
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 3
+stroke.Parent = frame
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 35)
+title.BackgroundTransparency = 1
+title.Text = "🎵 กันเจาะเปาสุดหล่อ"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 14
+title.Font = Enum.Font.GothamBold
+title.Parent = frame
+
+-- ช่องใส่ ID เพลง (ระบบ Smart Placeholder / ล็อคคำ)
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0, 220, 0, 35)
+textBox.Position = UDim2.new(0.5, -110, 0, 45)
+textBox.Text = "ช่องใส่เพลง"
+textBox.TextColor3 = Color3.fromRGB(150, 150, 150) -- สีเทาตอนแสดงคำว่าช่องใส่เพลง
+textBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+textBox.TextSize = 14
+textBox.Font = Enum.Font.Gotham
+textBox.Parent = frame
+
+local boxCorner = Instance.new("UICorner")
+boxCorner.CornerRadius = UDim.new(0, 6)
+boxCorner.Parent = textBox
+
+-- จัดการข้อความอัจฉริยะ (เมื่อกดพิมพ์จะหายไป, เมื่อลบหมดจะกลับมา)
+textBox.Focused:Connect(function()
+    if textBox.Text == "ช่องใส่เพลง" then
+        textBox.Text = ""
+        textBox.TextColor3 = Color3.fromRGB(255, 255, 255) -- เปลี่ยนเป็นสีขาวตอนพิมพ์จริง
+    end
+end)
+
+textBox.FocusLost:Connect(function()
+    if textBox.Text == "" then
+        textBox.Text = "ช่องใส่เพลง"
+        textBox.TextColor3 = Color3.fromRGB(150, 150, 150)
+    end
+end)
+
+-- ป้ายข้อความแสดง "ชื่อเพลงที่กำลังเปิดอยู่"
+local songNameLabel = Instance.new("TextLabel")
+songNameLabel.Size = UDim2.new(0, 220, 0, 25)
+songNameLabel.Position = UDim2.new(0.5, -110, 0, 85)
+songNameLabel.BackgroundTransparency = 1
+songNameLabel.Text = "🎶 กำลังเล่น: -"
+songNameLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+songNameLabel.TextSize = 12
+songNameLabel.Font = Enum.Font.Gotham
+songNameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+songNameLabel.Parent = frame
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 220, 0, 35)
+button.Position = UDim2.new(0.5, -110, 0, 118)
+button.Text = "🎶 เปิดเพลงใน Tool"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+button.TextSize = 14
+button.Font = Enum.Font.GothamBold
+button.Parent = frame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 6)
+btnCorner.Parent = button
+
+-- ปุ่ม Toggle (ปุ่มกลมเปิด-ปิดแบบไม่มีตัวอักษร)
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 45, 0, 45)
+toggleBtn.Position = UDim2.new(0, 50, 0, 50)
+toggleBtn.Text = ""
+toggleBtn.Active = true
+toggleBtn
