@@ -1,0 +1,190 @@
+-- สร้าง UI หน้าต่างเปลี่ยนเพลง Tool (เพิ่มระบบลากเลื่อนที่หัวข้อหน้าต่าง + ปุ่มวงกลม + ขอบวิบวับช้าๆ)
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+if playerGui:FindFirstChild("ToolMusicUI_AdvancedDrag") then
+    playerGui.ToolMusicUI_AdvancedDrag:Destroy()
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ToolMusicUI_AdvancedDrag"
+screenGui.Parent = playerGui
+
+-- กรอบหลัก (ล็อคตำแหน่ง ลากตรงกลางไม่ได้ แต่ลากที่หัวข้อได้)
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 260, 0, 150)
+frame.Position = UDim2.new(0.5, -130, 0.4, -75)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Active = false
+frame.Parent = screenGui
+
+-- ขอบเรืองแสงวิบวับ ขาว-ดำ
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 3
+stroke.Parent = frame
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
+
+-- แถบหัวข้อด้านบน (สามารถใช้กดจับลากเลื่อนหน้าต่างได้ตามต้องการ)
+local dragHeader = Instance.new("TextButton")
+dragHeader.Size = UDim2.new(1, 0, 0, 35)
+dragHeader.BackgroundTransparency = 1
+dragHeader.Text = "🎵 กันเจาะเปาสุดหล่อ"
+dragHeader.TextColor3 = Color3.fromRGB(255, 255, 255)
+dragHeader.TextSize = 14
+dragHeader.Font = Enum.Font.GothamBold
+dragHeader.Active = true
+dragHeader.Parent = frame
+
+-- ช่องใส่ ID เพลง (ระบบ Smart Placeholder / ล็อคคำ)
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0, 220, 0, 35)
+textBox.Position = UDim2.new(0.5, -110, 0, 45)
+textBox.Text = "ช่องใส่เพลง"
+textBox.TextColor3 = Color3.fromRGB(150, 150, 150)
+textBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+textBox.TextSize = 14
+textBox.Font = Enum.Font.Gotham
+textBox.Parent = frame
+
+local boxCorner = Instance.new("UICorner")
+boxCorner.CornerRadius = UDim.new(0, 6)
+boxCorner.Parent = textBox
+
+textBox.Focused:Connect(function()
+    if textBox.Text == "ช่องใส่เพลง" then
+        textBox.Text = ""
+        textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+end)
+
+textBox.FocusLost:Connect(function()
+    if textBox.Text == "" then
+        textBox.Text = "ช่องใส่เพลง"
+        textBox.TextColor3 = Color3.fromRGB(150, 150, 150)
+    end
+end)
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 220, 0, 35)
+button.Position = UDim2.new(0.5, -110, 0, 88)
+button.Text = "🎶 เปิดเพลงใน Tool"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+button.TextSize = 14
+button.Font = Enum.Font.GothamBold
+button.Parent = frame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 6)
+btnCorner.Parent = button
+
+-- ปุ่ม Toggle วงกลมมุม (ใช้ลากเลื่อนได้เช่นกัน)
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 45, 0, 45)
+toggleBtn.Position = UDim2.new(0, 50, 0, 50)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.Text = ""
+toggleBtn.Active = true
+toggleBtn.Parent = screenGui
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(1, 0)
+toggleCorner.Parent = toggleBtn
+
+-- ระบบลากเลื่อน (รองรับทั้งการลากที่ปุ่มวงกลม และลากที่หัวข้อหน้าต่าง)
+local UserInputService = game:GetService("UserInputService")
+local dragging, dragInput, dragStart, startPos
+
+local function startDrag(input, activeObject)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end
+
+toggleBtn.InputBegan:Connect(function(input) startDrag(input, toggleBtn) end)
+dragHeader.InputBegan:Connect(function(input) startDrag(input, dragHeader) end)
+
+local function updateDrag(input)
+    if dragging then
+        local delta = input.Position - dragStart
+        local newX = UDim.new(startPos.X.Scale, startPos.X.Offset + delta.X)
+        local newY = UDim.new(startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        
+        frame.Position = UDim2.new(newX.Scale, newX.Offset, newY.Scale, newY.Offset)
+        toggleBtn.Position = UDim2.new(newX.Scale, newX.Offset + 50, newY.Scale, newY.Offset + 50)
+    end
+end
+
+toggleBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+dragHeader.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        updateDrag(input)
+    end
+end)
+
+-- ระบบขอบวิบวับ ขาว-ดำ แบบช้าๆ
+task.spawn(function()
+    while screenGui and screenGui.Parent do
+        for i = 0, 1, 0.05 do
+            if not screenGui or not screenGui.Parent then break end
+            stroke.Color = Color3.fromRGB(255, 255, 255):Lerp(Color3.fromRGB(0, 0, 0), i)
+            task.wait(0.05)
+        end
+        for i = 0, 1, 0.05 do
+            if not screenGui or not screenGui.Parent then break end
+            stroke.Color = Color3.fromRGB(0, 0, 0):Lerp(Color3.fromRGB(255, 255, 255), i)
+            task.wait(0.05)
+        end
+    end
+end)
+
+-- ระบบคลิกเปิด-ปิดหน้าต่าง
+local isOpen = true
+toggleBtn.MouseButton1Click:Connect(function()
+    if not dragging then
+        isOpen = not isOpen
+        frame.Visible = isOpen
+    end
+end)
+
+-- คลิกขวาเพื่อลบสคริปต์
+toggleBtn.MouseButton2Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+-- ระบบส่งเพลง
+button.MouseButton1Click:Connect(function()
+    local songId = textBox.Text
+    if songId ~= "" and songId ~= "ช่องใส่เพลง" then
+        local args = {"ToolMusicText", songId, [4] = true}
+        game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("PlayerToolEvent"):FireServer(unpack(args))
+        button.Text = "✅ ส่งเพลงสำเร็จ!"
+        task.wait(1.5)
+        button.Text = "🎶 เปิดเพลงใน Tool"
+    end
+end)
+
+print("✨ Advanced Drag UI Loaded Successfully!")
